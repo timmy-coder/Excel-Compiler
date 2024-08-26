@@ -13,11 +13,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table"
+} from "../../components/ui/table"
 
 
 
-const Home = () => {
+const HomeMintues = () => {
   const [files, setFiles] = useState([]);
   const [combinedData, setCombinedData] = useState();
   const [data, setData] = useState()
@@ -35,12 +35,10 @@ const Home = () => {
     dataMap.forEach((value) => {
       const rowData = {
         name: value.name,
-        surname: value.surname,
         email: value.email,
+        surname: value.surname,
         totalScore: value.totalScore,
         scores: value.scores.join(', '),
-        averageScore: value.averageScore.toFixed(2),
-        counts: value.count
       };
       combinedArray.push(rowData);
     });
@@ -68,7 +66,7 @@ const Home = () => {
     workbook.eachSheet((worksheet) => {
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber > 1) { // Skip header row
-          let name, email, score, surname;
+          let email,score, name, surname;
           row.eachCell((cell) => {
             const columnLetter = cell.address.match(/[A-Z]+/)[0];
             const columnName = formatCellValue(worksheet.getRow(2).getCell(columnLetter).value);
@@ -80,28 +78,26 @@ const Home = () => {
             } 
             else if (columnName === 'Surname') {
               surname = cellValue;
-            } else if (columnName === 'Score') {
-              score = parseFloat(cellValue) || 0;
+            }
+            else if (columnName === 'Time in Session') {
+              score = parseInt(cellValue) || 0;
             }
           });
 
           if (email) {
-            const key = crypto.createHash('md5').update(`${email}`).digest('hex');
+            const key = crypto.createHash('md5').update(`${name}`).digest('hex');
             if (dataMap.has(key)) {
               const entry = dataMap.get(key);
               entry.scores.push(score);
               entry.totalScore += score;
-              entry.count++;
-              entry.averageScore = entry.totalScore / entry.count;
+             
             } else {
               dataMap.set(key, {
-                name: name || '',  // Ensure these fields are not undefined
-              surname: surname || '',
-              email,
-              totalScore: score || 0,
-              count: score !== undefined ? 1 : 0,
-              averageScore: score || 0,
-              scores: score !== undefined ? [score] : [],
+                name,
+                email,
+                surname,
+                totalScore: score,
+                scores: [score],
               });
             }
           }
@@ -122,14 +118,11 @@ const Home = () => {
     const worksheet = workbook.addWorksheet('Combined Data');
 
     const columns = [
-      { header: 'Name', key: 'name', width: 30 },
-      { header: 'Surname', key: 'surname', width: 15 },
-      { header: 'Email', key: 'email', width: 30 },
-      { header: 'Scores', key: 'scores', width: 50 },
-      { header: 'Total Score', key: 'totalScore', width: 15 },
-      { header: 'Average Score', key: 'averageScore', width: 15 },
-      { header: 'Tests Taken', key: 'counts', width: 15 },
-     
+      { header: 'First Name', key: 'name', width: 30 },
+      { header: 'Last Name', key: 'surname', width: 30 },
+      { header: 'Email Address', key: 'email', width: 30 },
+      { header: 'Time in Session ', key: 'scores', width: 50 },
+      { header: 'Total Time in Session ', key: 'totalScore', width: 15 },     
     ];
 
     worksheet.columns = columns;
@@ -142,19 +135,18 @@ const Home = () => {
       } 
       return 0;
     });
-     // Add rows to the worksheet
-  sortedDataArray.forEach((value) => {
-    const rowData = {
-      name: value.name,
-      surname: value.surname,
-      email: value.email,
-      totalScore: value.totalScore,
-      scores: value.scores.join(', '),
-      averageScore: value.averageScore.toFixed(2),
-      counts: value.count
-    };
-    worksheet.addRow(rowData);
-  });
+    sortedDataArray.forEach((value) => {
+      const rowData = {
+        name: value.name,
+        surname: value.surname,
+        email: value.email,
+        totalScore: value.totalScore,
+        scores: value.scores.join(', '),
+      };
+      worksheet.addRow(rowData);
+  
+    })
+   
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'combined_data.xlsx');
 
@@ -178,14 +170,11 @@ const Home = () => {
           <TableCaption>Merge alll your Excel files.</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead >Name</TableHead>
-              <TableHead>Surname</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="w-[250px]">Scores</TableHead>
-              <TableHead>Total Score</TableHead>
-              <TableHead>Average Score</TableHead>
-              <TableHead>Tests Taken</TableHead>
-              <TableHead className="text-right">Pass/Fail</TableHead>
+              <TableHead >First Name</TableHead>
+              <TableHead >Last Name</TableHead>
+              <TableHead >Email</TableHead>
+              <TableHead className="">Time in Session</TableHead>
+              <TableHead>Total Time in Session</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -193,18 +182,12 @@ const Home = () => {
             <TableRow key={index} className='mb-5'>
         
         <TableCell className="font-medium">{item.name}</TableCell>
-        
         <TableCell className="font-medium">{item.surname}</TableCell>
-        
-        <TableCell >{item.email}</TableCell>
+        <TableCell className="font-medium">{item.email}</TableCell>
         
         <TableCell>{item.scores}</TableCell>
         <TableCell >{item.totalScore}</TableCell>
         
-        <TableCell >{item.averageScore}</TableCell>
-        
-        <TableCell className='text-center' >{item.counts}</TableCell>
-        <TableCell  className={`text-center text-white ${item.counts==7 && item.averageScore >= 80?'bg-green-500 p-2 rounded-md': 'bg-red-600 p-2 rounded-md'}`}>{item.counts==7 && item.averageScore >= 80?'passed': 'fail'}</TableCell>
             </TableRow>
         
                   ))}
@@ -220,4 +203,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default HomeMintues;
